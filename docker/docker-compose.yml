@@ -9,7 +9,7 @@ services:
     environment:
       XDEBUG_MODE: debug
       XDEBUG_CONFIG: "client_host=host.docker.internal client_port=9003"
-      DATABASE_URL: "postgresql://root:root@db:5432/api_platform?serverVersion=16&charset=utf8"
+      DATABASE_URL: ${DATABASE_URL}
       MESSENGER_TRANSPORT_DSN: "redis://redis:6379/messages"
     depends_on:
       - db
@@ -24,7 +24,7 @@ services:
     volumes:
       - ../:/var/www/html:rw
     environment:
-      DATABASE_URL: "postgresql://root:root@db:5432/api_platform?serverVersion=16&charset=utf8"
+      DATABASE_URL: ${DATABASE_URL}
       MESSENGER_TRANSPORT_DSN: "redis://redis:6379/messages"
     depends_on:
       - db
@@ -53,9 +53,9 @@ services:
       timeout: 5s
       retries: 10
     environment:
-      POSTGRES_DB: api_platform
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
