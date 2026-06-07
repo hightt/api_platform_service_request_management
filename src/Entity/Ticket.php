@@ -1,55 +1,84 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Device;
-use App\Entity\Techician;
+use App\Entity\Technician;
 use App\Entity\TicketHistory;
 use App\Enum\TicketPriority;
 use App\Enum\TicketStatus;
 use App\Repository\TicketRepository;
+use App\State\Processor\TicketStateProcessor;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
+use ApiPlatform\Metadata\Patch;
 
 #[ORM\Entity(repositoryClass: TicketRepository::class)]
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            forceEager: true,
+        ),
+        new Get(),
+        new Post(processor: TicketStateProcessor::class),
+        new Patch(processor: TicketStateProcessor::class),
+    ],
+    normalizationContext: ['groups' => ['ticket:read']],
+    denormalizationContext: ['groups' => ['ticket:write']],
+)]
 class Ticket
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['ticket:read', 'ticketHistory:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['ticket:read', 'ticket:write'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['ticket:read', 'ticket:write'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, enumType: TicketPriority::class)]
+    #[Groups(['ticket:read', 'ticket:write'])]
     private ?TicketPriority $priority = null;
 
     #[ORM\Column(length: 255, enumType: TicketStatus::class)]
+    #[Groups(['ticket:read', 'ticket:write'])]
     private ?TicketStatus $status = null;
 
     #[ORM\Column]
+    #[Groups(['ticket:read'])]
     private ?DateTimeImmutable $createdAt = null;
 
     #[ORM\Column]
+    #[Groups(['ticket:read'])]
     private ?DateTimeImmutable $updatedAt = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
+    #[Groups(['ticket:read'])]
     private ?DateTimeImmutable $closedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'tickets')]
-    private ?Techician $assignedTechnician = null;
+    #[Groups(['ticket:read'])]
+    private ?Technician $assignedTechnician = null;
 
     #[ORM\ManyToOne(inversedBy: 'tickets')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['ticket:read', 'ticket:write'])]
     private ?Device $device = null;
 
     /**
@@ -61,6 +90,8 @@ class Ticket
     public function __construct()
     {
         $this->ticketHistories = new ArrayCollection();
+        $this->createdAt = new DateTimeImmutable();
+        $this->updatedAt = new DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -109,9 +140,10 @@ class Ticket
         return $this->status;
     }
 
-    public function setStatus(TicketStatus $status): static
+    /* We allow to accept both Enum (from API Platform) and string (from Workflow component) */
+    public function setStatus(TicketStatus|string $status): static
     {
-        $this->status = $status;
+        $this->status = is_string($status) ? TicketStatus::from($status) : $status;
 
         return $this;
     }
@@ -152,12 +184,12 @@ class Ticket
         return $this;
     }
 
-    public function getAssignedTechnician(): ?Techician
+    public function getAssignedTechnician(): ?Technician
     {
         return $this->assignedTechnician;
     }
 
-    public function setAssignedTechnician(?Techician $assignedTechnician): static
+    public function setAssignedTechnician(?Technician $assignedTechnician): static
     {
         $this->assignedTechnician = $assignedTechnician;
 
@@ -186,7 +218,7 @@ class Ticket
 
     public function addTicketHistory(TicketHistory $ticketHistory): static
     {
-        if (!$this->ticketHistories->contains($ticketHistory)) {
+        if (! $this->ticketHistories->contains($ticketHistory)) {
             $this->ticketHistories->add($ticketHistory);
             $ticketHistory->setTicket($this);
         }

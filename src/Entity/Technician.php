@@ -1,32 +1,43 @@
 <?php
 
-declare(strict_types=1);
+declare (strict_types=1);
 
 namespace App\Entity;
 
-use App\Repository\TechicianRepository;
+use ApiPlatform\Metadata\ApiResource;
+use App\Repository\TechnicianRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
-#[ORM\Entity(repositoryClass: TechicianRepository::class)]
-class Techician
+#[ORM\Entity(repositoryClass: TechnicianRepository::class)]
+#[ApiResource(
+    normalizationContext:   ['groups' => ['technician:read']],
+    denormalizationContext: ['groups' => ['technician:write']],
+)]
+class Technician
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['technician:read', 'ticketHistory:read', 'ticket:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['technician:read', 'technician:write', 'ticket:read'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 100)]
+    #[Groups(['technician:read', 'technician:write', 'ticket:read'])]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['technician:read', 'technician:write'])]
     private ?string $email = null;
 
     #[ORM\Column]
+    #[Groups(['technician:read', 'technician:write'])]
     private ?bool $active = null;
 
     /**
@@ -110,7 +121,7 @@ class Techician
 
     public function addTicket(Ticket $ticket): static
     {
-        if (!$this->tickets->contains($ticket)) {
+        if (! $this->tickets->contains($ticket)) {
             $this->tickets->add($ticket);
             $ticket->setAssignedTechnician($this);
         }
@@ -140,7 +151,7 @@ class Techician
 
     public function addTicketHistory(TicketHistory $ticketHistory): static
     {
-        if (!$this->ticketHistories->contains($ticketHistory)) {
+        if (! $this->ticketHistories->contains($ticketHistory)) {
             $this->ticketHistories->add($ticketHistory);
             $ticketHistory->setCreatedBy($this);
         }
