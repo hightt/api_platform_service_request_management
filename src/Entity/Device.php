@@ -7,11 +7,13 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Entity\Ticket;
 use App\Repository\DeviceRepository;
+use Assert\NotBlank;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DeviceRepository::class)]
 #[ApiResource(
@@ -28,14 +30,23 @@ class Device
 
     #[ORM\Column(length: 255)]
     #[Groups(['device:read', 'device:write'])]
+    #[Assert\NotBlank(message: 'Serial number cannot be blank.')]
+    #[Assert\Length(
+        min: 3,
+        max: 50,
+        minMessage: 'Serial number must be at least {{ limit }} characters long.',
+        maxMessage: 'Serial number cannot be longer than {{ limit }} characters.',
+    )]
     private ?string $serialNumber = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['device:read', 'device:write'])]
+    #[Assert\NotBlank(message: 'Device model cannot be blank.')]
     private ?string $model = null;
 
     #[ORM\Column(length: 255)]
     #[Groups(['device:read', 'device:write'])]
+    #[Assert\NotBlank(message: 'Customer name cannot be blank.')]
     private ?string $customerName = null;
 
     #[ORM\Column]

@@ -22,6 +22,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 use ApiPlatform\Metadata\Patch;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TicketRepository::class)]
 #[ApiResource(
@@ -46,18 +47,33 @@ class Ticket
 
     #[ORM\Column(length: 255)]
     #[Groups(['ticket:read', 'ticket:write'])]
+    #[Assert\NotBlank(message: 'Ticket title cannot be blank.')]
+    #[Assert\Length(
+        min: 5,
+        max: 255,
+        minMessage: 'Ticket title must be at least {{ limit }} characters long.',
+        maxMessage: 'Ticket title cannot be longer than {{ limit }} characters.'
+    )]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(['ticket:read', 'ticket:write'])]
+    #[Assert\Length(
+        max: 5000,
+        maxMessage: 'Description cannot be longer than {{ limit }} characters.'
+    )]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, enumType: TicketPriority::class)]
     #[Groups(['ticket:read', 'ticket:write'])]
+    #[Assert\NotNull(message: 'Ticket priority must be specified.')]
+    #[Assert\Type(type: TicketPriority::class, message: 'Invalid priority value provided.')]
     private ?TicketPriority $priority = null;
 
     #[ORM\Column(length: 255, enumType: TicketStatus::class)]
     #[Groups(['ticket:read', 'ticket:write'])]
+    #[Assert\NotNull(message: 'Ticket status must be specified.')]
+    #[Assert\Type(type: TicketStatus::class, message: 'Invalid status value provided.')]
     private ?TicketStatus $status = null;
 
     #[ORM\Column]

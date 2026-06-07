@@ -7,14 +7,13 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
-use ApiPlatform\Metadata\Patch;
-use ApiPlatform\Metadata\Post;
 use App\Entity\Technician;
 use App\Entity\Ticket;
 use App\Repository\TicketHistoryRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TicketHistoryRepository::class)]
 #[ApiResource(
@@ -23,8 +22,6 @@ use Symfony\Component\Serializer\Attribute\Groups;
             forceEager: true,
         ),
         new Get(),
-        new Post(),
-        new Patch(),
     ],
     normalizationContext: ['groups' => ['ticketHistory:read']],
 )]
@@ -39,6 +36,7 @@ class TicketHistory
     #[ORM\ManyToOne(inversedBy: 'ticketHistories')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['ticketHistory:read'])]
+    #[Assert\NotNull(message: 'History log must be attached to a valid ticket.')]
     private ?Ticket $ticket = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -47,10 +45,12 @@ class TicketHistory
 
     #[ORM\Column(length: 255)]
     #[Groups(['ticketHistory:read'])]
+    #[Assert\NotBlank(message: 'The new status value cannot be blank.')]
     private ?string $newStatus = null;
 
     #[ORM\Column]
     #[Groups(['ticketHistory:read'])]
+    #[Assert\NotNull(message: 'The timestamp of the change must be set.')]
     private ?DateTimeImmutable $changedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'ticketHistories')]

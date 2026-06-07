@@ -6,6 +6,7 @@ namespace App\State\Processor;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
+use ApiPlatform\Validator\Exception\ValidationException;
 use App\Entity\Ticket;
 use App\Event\TicketStatusChangedEvent;
 use App\Service\Ticket\TicketWorkflowService;
@@ -13,6 +14,8 @@ use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Workflow\WorkflowInterface;
 
 class TicketStateProcessor implements ProcessorInterface
@@ -48,7 +51,17 @@ class TicketStateProcessor implements ProcessorInterface
         $data->setStatus($oldStatus);
         [$allowed, $transitionName] = $this->ticketWorkflowService->isTicketStatusChangeAllowed($newStatus, $data);
         if (!$allowed) {
-            throw new BadRequestHttpException(sprintf('Ticket transition from status "%s" to "%s" is not allowed', $oldStatus, $newStatus));
+            $violations = new ConstraintViolationList([
+                new ConstraintViolation(
+                    sprintf('Ticket transition from status "%s" to "%s" is not allowed.', $oldStatus, $newStatus),
+                    null,
+                    [],
+                    $data,
+                    'status',
+                    $newStatus,
+                ),
+            ]);
+            throw new ValidationException($violations);
         }
         $this->ticketStatusStateMachine->apply($data, $transitionName);
 

@@ -10,8 +10,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TechnicianRepository::class)]
+#[UniqueEntity(fields: ['email'], message: 'A technician with this email address already exists.')]
 #[ApiResource(
     normalizationContext:   ['groups' => ['technician:read']],
     denormalizationContext: ['groups' => ['technician:write']],
@@ -26,18 +29,35 @@ class Technician
 
     #[ORM\Column(length: 100)]
     #[Groups(['technician:read', 'technician:write', 'ticket:read'])]
+    #[Assert\NotBlank(message: 'First name cannot be blank.')]
+    #[Assert\Length(
+        min: 2,
+        max: 100,
+        minMessage: 'First name must be at least {{ limit }} characters long.',
+        maxMessage: 'First name cannot be longer than {{ limit }} characters.'
+    )]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 100)]
     #[Groups(['technician:read', 'technician:write', 'ticket:read'])]
+    #[Assert\NotBlank(message: 'Last name cannot be blank.')]
+    #[Assert\Length(
+        min: 2,
+        max: 100,
+        minMessage: 'Last name must be at least {{ limit }} characters long.',
+        maxMessage: 'Last name cannot be longer than {{ limit }} characters.'
+    )]
     private ?string $lastName = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     #[Groups(['technician:read', 'technician:write'])]
+    #[Assert\NotBlank(message: 'Email address cannot be blank.')]
+    #[Assert\Email(message: 'The email "{{ value }}" is not a valid email address.')]
     private ?string $email = null;
 
     #[ORM\Column]
     #[Groups(['technician:read', 'technician:write'])]
+    #[Assert\NotNull(message: 'The active status must be specified (true or false).')]
     private ?bool $active = null;
 
     /**
