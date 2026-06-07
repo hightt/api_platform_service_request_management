@@ -25,3 +25,12 @@ framework:
                 complete:
                     from: IN_PROGRESS
                     to: DONE
+                cancel_new:
+                    from: NEW
+                    to: CANCELLED
+                cancel_assigned:
+                    from: ASSIGNED
+                    to: CANCELLED
+                cancel_in_progress:
+                    from: IN_PROGRESS
+                    to: CANCELLED
