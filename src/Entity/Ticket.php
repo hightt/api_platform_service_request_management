@@ -7,21 +7,28 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\OpenApi\Model\Operation as OpenApiOperation;
+use ApiPlatform\OpenApi\Model\RequestBody;
+use ApiPlatform\OpenApi\Model\Response as OpenApiResponse;
+use App\Dto\Ticket\TicketAssignInput;
 use App\Entity\Device;
 use App\Entity\Technician;
 use App\Entity\TicketHistory;
 use App\Enum\TicketPriority;
 use App\Enum\TicketStatus;
 use App\Repository\TicketRepository;
+use App\State\Processor\TicketAssignProcessor;
 use App\State\Processor\TicketStateProcessor;
+use ArrayObject;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Attribute\Groups;
-use ApiPlatform\Metadata\Patch;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TicketRepository::class)]
@@ -33,6 +40,41 @@ use Symfony\Component\Validator\Constraints as Assert;
         new Get(),
         new Post(processor: TicketStateProcessor::class),
         new Patch(processor: TicketStateProcessor::class),
+        new Post(
+            uriTemplate: '/tickets/{id}/assign',
+            status: 200,
+            input: TicketAssignInput::class,
+            processor: TicketAssignProcessor::class,
+            openapi: new OpenApiOperation(
+                summary: 'Assign a technician to a ticket',
+                description: 'Validates technician status, updates ticket to ASSIGNED, and creates a history log.',
+                requestBody: new RequestBody(
+                    description: 'The assignment payload containing the technician ID',
+                    content: new ArrayObject([
+                        'application/ld+json' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'technicianId' => [
+                                        'type' => 'integer',
+                                        'example' => 1,
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ]),
+                    required: true,
+                ),
+                responses: [
+                    Response::HTTP_OK => new OpenApiResponse(
+                        description: 'Technician successfully assigned',
+                    ),
+                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(
+                        description: 'Validation or Workflow constraint violation',
+                    ),
+                ],
+            ),
+        ),
     ],
     normalizationContext: ['groups' => ['ticket:read']],
     denormalizationContext: ['groups' => ['ticket:write']],
@@ -52,7 +94,7 @@ class Ticket
         min: 5,
         max: 255,
         minMessage: 'Ticket title must be at least {{ limit }} characters long.',
-        maxMessage: 'Ticket title cannot be longer than {{ limit }} characters.'
+        maxMessage: 'Ticket title cannot be longer than {{ limit }} characters.',
     )]
     private ?string $title = null;
 
@@ -60,7 +102,7 @@ class Ticket
     #[Groups(['ticket:read', 'ticket:write'])]
     #[Assert\Length(
         max: 5000,
-        maxMessage: 'Description cannot be longer than {{ limit }} characters.'
+        maxMessage: 'Description cannot be longer than {{ limit }} characters.',
     )]
     private ?string $description = null;
 

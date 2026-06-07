@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use ApiPlatform\Validator\Exception\ValidationException;
 use App\Entity\Ticket;
+use App\Enum\TicketStatus;
 use App\Event\TicketStatusChangedEvent;
 use App\Service\Ticket\TicketWorkflowService;
 use InvalidArgumentException;
@@ -40,8 +41,8 @@ class TicketStateProcessor implements ProcessorInterface
 
         /** @var Ticket $previousTicket */
         $previousTicket = $context['previous_data'];
-        $oldStatus = $previousTicket->getStatus()?->value;
-        $newStatus = $data->getStatus()->value;
+        $oldStatus = $previousTicket->getStatus();
+        $newStatus = $data->getStatus();
 
         if ($oldStatus === $newStatus) {
             return $this->persistProcessor->process($data, $operation, $uriVariables, $context);
@@ -63,22 +64,22 @@ class TicketStateProcessor implements ProcessorInterface
         $result = $this->persistProcessor->process($ticket, $operation, $uriVariables, $context);
 
         $this->eventDispatcher->dispatch(
-            new TicketStatusChangedEvent($result, null, $result->getStatus()?->value),
+            new TicketStatusChangedEvent($result, null, $result->getStatus()),
         );
 
         return $result;
     }
 
-    private function throwValidationError(mixed $data, ?string $oldStatus, string $newStatus): void
+    private function throwValidationError(mixed $data, ?TicketStatus $oldStatus, TicketStatus $newStatus): void
     {
         $violations = new ConstraintViolationList([
             new ConstraintViolation(
-                sprintf('Ticket transition from status "%s" to "%s" is not allowed.', $oldStatus, $newStatus),
+                sprintf('Ticket transition from status "%s" to "%s" is not allowed.', $oldStatus?->value, $newStatus->value),
                 null,
                 [],
                 $data,
                 'status',
-                $newStatus,
+                $newStatus->value,
             ),
         ]);
 

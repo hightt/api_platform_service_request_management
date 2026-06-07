@@ -23,8 +23,8 @@ class TicketHistoryCreateService
         $history = new TicketHistory();
         $history
             ->setTicket($ticket)
-            ->setOldStatus($event->getOldStatus())
-            ->setNewStatus($event->getNewStatus())
+            ->setOldStatus($event->getOldStatus()?->value)
+            ->setNewStatus($event->getNewStatus()->value)
             ->setChangedAt(new DateTimeImmutable())
         ;
 
