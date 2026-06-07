@@ -13,7 +13,6 @@ use App\Service\Ticket\TicketWorkflowService;
 use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Workflow\WorkflowInterface;
@@ -51,17 +50,7 @@ class TicketStateProcessor implements ProcessorInterface
         $data->setStatus($oldStatus);
         [$allowed, $transitionName] = $this->ticketWorkflowService->isTicketStatusChangeAllowed($newStatus, $data);
         if (!$allowed) {
-            $violations = new ConstraintViolationList([
-                new ConstraintViolation(
-                    sprintf('Ticket transition from status "%s" to "%s" is not allowed.', $oldStatus, $newStatus),
-                    null,
-                    [],
-                    $data,
-                    'status',
-                    $newStatus,
-                ),
-            ]);
-            throw new ValidationException($violations);
+            $this->throwValidationError($data, $oldStatus, $newStatus);
         }
         $this->ticketStatusStateMachine->apply($data, $transitionName);
 
@@ -78,5 +67,21 @@ class TicketStateProcessor implements ProcessorInterface
         );
 
         return $result;
+    }
+
+    private function throwValidationError(mixed $data, ?string $oldStatus, string $newStatus): void
+    {
+        $violations = new ConstraintViolationList([
+            new ConstraintViolation(
+                sprintf('Ticket transition from status "%s" to "%s" is not allowed.', $oldStatus, $newStatus),
+                null,
+                [],
+                $data,
+                'status',
+                $newStatus,
+            ),
+        ]);
+
+        throw new ValidationException($violations);
     }
 }
