@@ -9,6 +9,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\QueryParameter;
 use ApiPlatform\OpenApi\Model\Operation as OpenApiOperation;
 use ApiPlatform\OpenApi\Model\RequestBody;
 use ApiPlatform\OpenApi\Model\Response as OpenApiResponse;
@@ -21,6 +22,7 @@ use App\Enum\TicketStatus;
 use App\Repository\TicketRepository;
 use App\State\Processor\TicketAssignProcessor;
 use App\State\Processor\TicketStateProcessor;
+use App\State\Provider\TicketCollectionProvider;
 use ArrayObject;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -36,6 +38,15 @@ use Symfony\Component\Validator\Constraints as Assert;
     operations: [
         new GetCollection(
             forceEager: true,
+            provider: TicketCollectionProvider::class,
+            parameters: [
+                'status' => new QueryParameter(property: 'status', description: 'Filter by ticket status'),
+                'priority' => new QueryParameter(property: 'priority', description: 'Filter by ticket priority'),
+                'serialNumber' => new QueryParameter(property: 'serialNumber', description: 'Search by serial number (partial match)'),
+                'page' => new QueryParameter(property: 'page', description: 'Page number'),
+                'itemsPerPage' => new QueryParameter(property: 'itemsPerPage', description: 'Number of items per page'),
+                'order' => new QueryParameter(property: 'order', description: 'Sort by field, e.g. order[createdAt]=desc'),
+            ]
         ),
         new Get(),
         new Post(processor: TicketStateProcessor::class),
