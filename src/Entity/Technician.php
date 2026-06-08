@@ -5,12 +5,21 @@ declare (strict_types=1);
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\OpenApi\Model\Operation as OpenApiOperation;
+use App\Dto\Technician\TechnicianPerformanceOutput;
+use App\Entity\Ticket;
+use App\Entity\TicketHistory;
 use App\Repository\TechnicianRepository;
+use App\State\Provider\TechnicianPerformanceProvider;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TechnicianRepository::class)]
@@ -18,6 +27,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource(
     normalizationContext:   ['groups' => ['technician:read']],
     denormalizationContext: ['groups' => ['technician:write']],
+    operations: [
+        new GetCollection(),
+        new GetCollection(
+            uriTemplate: '/technicians/stats',
+            status: 200,
+            output: TechnicianPerformanceOutput::class,
+            provider: TechnicianPerformanceProvider::class,
+            normalizationContext: ['groups' => ['technician:stats']],
+            paginationEnabled: false,
+            openapi: new OpenApiOperation(
+                summary: 'Get performance statistics for all technicians',
+                description: 'Returns total closed tickets and average resolution time in hours for each technician.',
+            ),
+        ),
+        new Get(),
+        new Post(),
+        new Patch(),
+    ],
 )]
 class Technician
 {
@@ -34,7 +61,7 @@ class Technician
         min: 2,
         max: 100,
         minMessage: 'First name must be at least {{ limit }} characters long.',
-        maxMessage: 'First name cannot be longer than {{ limit }} characters.'
+        maxMessage: 'First name cannot be longer than {{ limit }} characters.',
     )]
     private ?string $firstName = null;
 
@@ -45,7 +72,7 @@ class Technician
         min: 2,
         max: 100,
         minMessage: 'Last name must be at least {{ limit }} characters long.',
-        maxMessage: 'Last name cannot be longer than {{ limit }} characters.'
+        maxMessage: 'Last name cannot be longer than {{ limit }} characters.',
     )]
     private ?string $lastName = null;
 
