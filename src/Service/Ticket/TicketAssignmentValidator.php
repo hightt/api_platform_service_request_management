@@ -7,18 +7,12 @@ namespace App\Service\Ticket;
 use App\Application\Ticket\Command\AssignTechnicianCommand;
 use App\Entity\Technician;
 use App\Entity\Ticket;
-use App\Service\Ticket\TicketWorkflowService;
 use App\Trait\ValidationExceptionTrait;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class TicketAssignmentValidator
 {
     use ValidationExceptionTrait;
-
-    public function __construct(
-        private TicketWorkflowService $ticketWorkflowService,
-    ) {
-    }
 
     public function validateBeforeAssign(
         AssignTechnicianCommand $command,
