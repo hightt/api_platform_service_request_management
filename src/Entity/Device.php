@@ -29,6 +29,7 @@ class Device
 
     #[ORM\Column(length: 255)]
     #[Groups(['device:read', 'device:write'])]
+    #[Assert\Unique(message: 'A device with this serial number already exists.')]
     #[Assert\NotBlank(message: 'Serial number cannot be blank.')]
     #[Assert\Length(
         min: 3,
