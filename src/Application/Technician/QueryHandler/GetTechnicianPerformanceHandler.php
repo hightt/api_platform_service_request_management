@@ -27,7 +27,7 @@ class GetTechnicianPerformanceHandler
             'COALESCE(ROUND(CAST(AVG(EXTRACT(EPOCH FROM (t.closed_at - t.created_at))) / 3600 AS numeric), 1), 0.0) as averageClosingTimeHours',
         )
             ->from('technician', 'tech')
-            ->leftJoin('tech', 'ticket', 't', "t.assigned_technician_id = tech.id AND t.status = 'CLOSED'")
+            ->leftJoin('tech', 'ticket', 't', "t.assigned_technician_id = tech.id AND t.status = 'DONE'")
             ->groupBy('tech.id')
             ->orderBy('closedTickets', 'DESC');
 
