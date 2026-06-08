@@ -7,7 +7,6 @@ namespace App\Entity;
 use ApiPlatform\Metadata\ApiResource;
 use App\Entity\Ticket;
 use App\Repository\DeviceRepository;
-use Assert\NotBlank;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;

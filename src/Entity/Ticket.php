@@ -53,7 +53,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new Patch(processor: TicketStateProcessor::class),
         new Post(
             uriTemplate: '/tickets/{id}/assign',
-            status: 200,
+            status: Response::HTTP_OK,
             input: TicketAssignInput::class,
             processor: TicketAssignProcessor::class,
             openapi: new OpenApiOperation(
