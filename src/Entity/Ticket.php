@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types=1);
+declare(strict_types=1);
 
 namespace App\Entity;
 
@@ -41,25 +41,53 @@ use Symfony\Component\Validator\Constraints as Assert;
             forceEager: true,
             provider: TicketCollectionProvider::class,
             security: "is_granted('ROLE_TECHNICIAN')",
+            openapi: new OpenApiOperation(
+                summary: 'Retrieve a filtered list of tickets',
+                description: 'Returns a paginated list of tickets. Technicians can filter by status, priority, or device serial number.',
+            ),
             parameters: [
-                'status' => new QueryParameter(property: 'status', description: 'Filter by ticket status'),
-                'priority' => new QueryParameter(property: 'priority', description: 'Filter by ticket priority'),
+                'status' => new QueryParameter(property: 'status', description: 'Filter by ticket status (e.g. NEW, ASSIGNED, IN_PROGRESS, DONE, CANCELLED)'),
+                'priority' => new QueryParameter(property: 'priority', description: 'Filter by ticket priority (e.g. LOW, MEDIUM, HIGH)'),
                 'serialNumber' => new QueryParameter(property: 'serialNumber', description: 'Search by serial number (partial match)'),
-                'page' => new QueryParameter(property: 'page', description: 'Page number'),
+                'page' => new QueryParameter(property: 'page', description: 'Page number for pagination'),
                 'itemsPerPage' => new QueryParameter(property: 'itemsPerPage', description: 'Number of items per page'),
                 'order' => new QueryParameter(property: 'order', description: 'Sort by field, e.g. order[createdAt]=desc'),
-            ]
+            ],
         ),
         new Get(
             security: "is_granted('ROLE_TECHNICIAN')",
+            openapi: new OpenApiOperation(
+                summary: 'Get details of a specific ticket',
+                description: 'Returns full details of a single ticket including its assignment and device information.',
+            ),
         ),
         new Post(
             processor: TicketStateProcessor::class,
-            security: "is_granted('ROLE_TECHNICIAN')"
+            security: "is_granted('ROLE_TECHNICIAN')",
+            status: Response::HTTP_CREATED,
+            openapi: new OpenApiOperation(
+                summary: 'Create a new ticket',
+                description: 'Creates a ticket with initial status (NEW). Automatically dispatches status change events.',
+                responses: [
+                    Response::HTTP_CREATED => new OpenApiResponse(description: 'Ticket successfully created.'),
+                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(description: 'Validation failed.'),
+                    Response::HTTP_BAD_REQUEST => new OpenApiResponse(description: 'Invalid JSON payload.'),
+                ],
+            ),
         ),
         new Patch(
             processor: TicketStateProcessor::class,
             security: "is_granted('" . TicketAccessVoter::EDIT . "', object)",
+            status: Response::HTTP_OK,
+            openapi: new OpenApiOperation(
+                summary: 'Update an existing ticket / Change status',
+                description: 'Allows the assigned technician to update ticket details or progress its status through the workflow state machine.',
+                responses: [
+                    Response::HTTP_OK => new OpenApiResponse(description: 'Ticket successfully updated.'),
+                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(description: 'Workflow transition forbidden or validation failed.'),
+                    Response::HTTP_FORBIDDEN => new OpenApiResponse(description: 'Access denied. You are not the assigned technician.'),
+                ],
+            ),
         ),
         new Post(
             uriTemplate: '/tickets/{id}/assign',
@@ -93,6 +121,9 @@ use Symfony\Component\Validator\Constraints as Assert;
                     ),
                     Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(
                         description: 'Validation or Workflow constraint violation',
+                    ),
+                    Response::HTTP_FORBIDDEN => new OpenApiResponse(
+                        description: 'Access denied. Only administrators can perform this action.',
                     ),
                 ],
             ),

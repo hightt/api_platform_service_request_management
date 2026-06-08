@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types=1);
+declare(strict_types=1);
 
 namespace App\Entity;
 
@@ -11,10 +11,14 @@ use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: DeviceRepository::class)]
+#[ORM\Table(name: 'device')]
+#[ORM\UniqueConstraint(name: 'UNIQ_DEVICE_SERIAL_NUMBER', fields: ['serialNumber'])]
+#[UniqueEntity(fields: ['serialNumber'], message: 'A device with this serial number already exists.')]
 #[ApiResource(
     normalizationContext: ['groups' => ['device:read']],
     denormalizationContext: ['groups' => ['device:write']],
@@ -24,12 +28,11 @@ class Device
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['device:read'])]
+    #[Groups(['device:read', 'ticket:read'])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    #[Groups(['device:read', 'device:write'])]
-    #[Assert\Unique(message: 'A device with this serial number already exists.')]
+    #[ORM\Column(length: 50, unique: true)]
+    #[Groups(['device:read', 'device:write', 'ticket:read'])]
     #[Assert\NotBlank(message: 'Serial number cannot be blank.')]
     #[Assert\Length(
         min: 3,
@@ -40,12 +43,12 @@ class Device
     private ?string $serialNumber = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['device:read', 'device:write'])]
+    #[Groups(['device:read', 'device:write', 'ticket:read'])]
     #[Assert\NotBlank(message: 'Device model cannot be blank.')]
     private ?string $model = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['device:read', 'device:write'])]
+    #[Groups(['device:read', 'device:write', 'ticket:read'])]
     #[Assert\NotBlank(message: 'Customer name cannot be blank.')]
     private ?string $customerName = null;
 
@@ -139,7 +142,6 @@ class Device
     public function removeTicket(Ticket $ticket): static
     {
         if ($this->tickets->removeElement($ticket)) {
-            // set the owning side to null (unless already changed)
             if ($ticket->getDevice() === $this) {
                 $ticket->setDevice(null);
             }

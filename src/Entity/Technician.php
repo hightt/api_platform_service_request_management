@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types=1);
+declare(strict_types=1);
 
 namespace App\Entity;
 
@@ -10,6 +10,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model\Operation as OpenApiOperation;
+use ApiPlatform\OpenApi\Model\Response as OpenApiResponse;
 use App\Dto\Technician\TechnicianPerformanceOutput;
 use App\Entity\Ticket;
 use App\Entity\TicketHistory;
@@ -19,19 +20,27 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TechnicianRepository::class)]
+#[ORM\Table(name: 'technician')]
+#[ORM\UniqueConstraint(name: 'UNIQ_TECHNICIAN_EMAIL', fields: ['email'])]
 #[UniqueEntity(fields: ['email'], message: 'A technician with this email address already exists.')]
 #[ApiResource(
     normalizationContext:   ['groups' => ['technician:read']],
     denormalizationContext: ['groups' => ['technician:write']],
     operations: [
-        new GetCollection(),
+        new GetCollection(
+            openapi: new OpenApiOperation(
+                summary: 'Retrieve all technicians',
+                description: 'Returns a list of all technicians registered in the system.'
+            )
+        ),
         new GetCollection(
             uriTemplate: '/technicians/stats',
-            status: 200,
+            status: Response::HTTP_OK,
             output: TechnicianPerformanceOutput::class,
             provider: TechnicianPerformanceProvider::class,
             normalizationContext: ['groups' => ['technician:stats']],
@@ -39,11 +48,39 @@ use Symfony\Component\Validator\Constraints as Assert;
             openapi: new OpenApiOperation(
                 summary: 'Get performance statistics for all technicians',
                 description: 'Returns total closed tickets and average resolution time in hours for each technician.',
+                responses: [
+                    Response::HTTP_OK => new OpenApiResponse(description: 'Statistics calculated successfully.')
+                ]
             ),
         ),
-        new Get(),
-        new Post(),
-        new Patch(),
+        new Get(
+            openapi: new OpenApiOperation(
+                summary: 'Get details of a specific technician',
+                description: 'Returns profile data for a single technician.'
+            )
+        ),
+        new Post(
+            status: Response::HTTP_CREATED,
+            openapi: new OpenApiOperation(
+                summary: 'Create a new technician',
+                description: 'Creates a technician profile and links it with a mandatory security User account.',
+                responses: [
+                    Response::HTTP_CREATED => new OpenApiResponse(description: 'Technician successfully created.'),
+                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(description: 'Validation failed (e.g. duplicate email).')
+                ]
+            )
+        ),
+        new Patch(
+            status: Response::HTTP_OK,
+            openapi: new OpenApiOperation(
+                summary: 'Update technician details',
+                description: 'Updates specific fields of an existing technician profile.',
+                responses: [
+                    Response::HTTP_OK => new OpenApiResponse(description: 'Technician updated successfully.'),
+                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(description: 'Invalid input data.')
+                ]
+            )
+        ),
     ],
 )]
 class Technician
@@ -51,11 +88,11 @@ class Technician
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['technician:read', 'ticketHistory:read', 'ticket:read'])]
+    #[Groups(['technician:read', 'ticketHistory:read', 'ticket:read', 'technician:stats'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    #[Groups(['technician:read', 'technician:write', 'ticket:read'])]
+    #[Groups(['technician:read', 'technician:write', 'ticket:read', 'technician:stats'])]
     #[Assert\NotBlank(message: 'First name cannot be blank.')]
     #[Assert\Length(
         min: 2,
@@ -66,7 +103,7 @@ class Technician
     private ?string $firstName = null;
 
     #[ORM\Column(length: 100)]
-    #[Groups(['technician:read', 'technician:write', 'ticket:read'])]
+    #[Groups(['technician:read', 'technician:write', 'ticket:read', 'technician:stats'])]
     #[Assert\NotBlank(message: 'Last name cannot be blank.')]
     #[Assert\Length(
         min: 2,
@@ -77,7 +114,7 @@ class Technician
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Groups(['technician:read', 'technician:write'])]
+    #[Groups(['technician:read', 'technician:write', 'ticket:read'])]
     #[Assert\NotBlank(message: 'Email address cannot be blank.')]
     #[Assert\Email(message: 'The email "{{ value }}" is not a valid email address.')]
     private ?string $email = null;
@@ -101,6 +138,7 @@ class Technician
 
     #[ORM\OneToOne(inversedBy: 'technician', cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['technician:read', 'technician:write'])]
     private ?User $login = null;
 
     public function __construct()
@@ -183,7 +221,6 @@ class Technician
     public function removeTicket(Ticket $ticket): static
     {
         if ($this->tickets->removeElement($ticket)) {
-            // set the owning side to null (unless already changed)
             if ($ticket->getAssignedTechnician() === $this) {
                 $ticket->setAssignedTechnician(null);
             }
@@ -213,7 +250,6 @@ class Technician
     public function removeTicketHistory(TicketHistory $ticketHistory): static
     {
         if ($this->ticketHistories->removeElement($ticketHistory)) {
-            // set the owning side to null (unless already changed)
             if ($ticketHistory->getCreatedBy() === $this) {
                 $ticketHistory->setCreatedBy(null);
             }
