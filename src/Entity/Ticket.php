@@ -20,6 +20,7 @@ use App\Entity\TicketHistory;
 use App\Enum\TicketPriority;
 use App\Enum\TicketStatus;
 use App\Repository\TicketRepository;
+use App\Security\Voter\TicketAccessVoter;
 use App\State\Processor\TicketAssignProcessor;
 use App\State\Processor\TicketStateProcessor;
 use App\State\Provider\TicketCollectionProvider;
@@ -39,6 +40,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         new GetCollection(
             forceEager: true,
             provider: TicketCollectionProvider::class,
+            security: "is_granted('ROLE_TECHNICIAN')",
             parameters: [
                 'status' => new QueryParameter(property: 'status', description: 'Filter by ticket status'),
                 'priority' => new QueryParameter(property: 'priority', description: 'Filter by ticket priority'),
@@ -48,11 +50,20 @@ use Symfony\Component\Validator\Constraints as Assert;
                 'order' => new QueryParameter(property: 'order', description: 'Sort by field, e.g. order[createdAt]=desc'),
             ]
         ),
-        new Get(),
-        new Post(processor: TicketStateProcessor::class),
-        new Patch(processor: TicketStateProcessor::class),
+        new Get(
+            security: "is_granted('ROLE_TECHNICIAN')",
+        ),
+        new Post(
+            processor: TicketStateProcessor::class,
+            security: "is_granted('ROLE_TECHNICIAN')"
+        ),
+        new Patch(
+            processor: TicketStateProcessor::class,
+            security: "is_granted('" . TicketAccessVoter::EDIT . "', object)",
+        ),
         new Post(
             uriTemplate: '/tickets/{id}/assign',
+            security: "is_granted('ROLE_ADMIN')",
             status: Response::HTTP_OK,
             input: TicketAssignInput::class,
             processor: TicketAssignProcessor::class,

@@ -99,6 +99,10 @@ class Technician
     #[ORM\OneToMany(targetEntity: TicketHistory::class, mappedBy: 'createdBy', orphanRemoval: true)]
     private Collection $ticketHistories;
 
+    #[ORM\OneToOne(inversedBy: 'technician', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $login = null;
+
     public function __construct()
     {
         $this->tickets = new ArrayCollection();
@@ -214,6 +218,18 @@ class Technician
                 $ticketHistory->setCreatedBy(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getLogin(): ?User
+    {
+        return $this->login;
+    }
+
+    public function setLogin(User $login): static
+    {
+        $this->login = $login;
 
         return $this;
     }
