@@ -52,8 +52,8 @@ class TicketCollectionProvider implements ProviderInterface
             description: (string) $row['description'],
             status: (string) $row['status'],
             priority: (string) $row['priority'],
-            createdAt: (string) $row['createdAt'],
-            serialNumber: $row['serialNumber'] ? (string) $row['serialNumber'] : null,
+            createdAt: (string) $row['createdat'],
+            serialNumber: $row['serialnumber'] ? (string) $row['serialnumber'] : null,
         ), $result['data']);
 
         return new CustomCollectionPaginator(

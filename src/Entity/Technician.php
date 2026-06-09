@@ -35,16 +35,16 @@ use Symfony\Component\Validator\Constraints as Assert;
         new GetCollection(
             openapi: new OpenApiOperation(
                 summary: 'Retrieve all technicians',
-                description: 'Returns a list of all technicians registered in the system.'
-            )
+                description: 'Returns a list of all technicians registered in the system.',
+            ),
         ),
         new GetCollection(
             uriTemplate: '/technicians/stats',
             status: Response::HTTP_OK,
             cacheHeaders: [
-                'max_age' => 60,      
-                'shared_max_age' => 120, 
-                'vary' => ['Authorization', 'Accept']
+                'max_age' => 60,
+                'shared_max_age' => 120,
+                'vary' => ['Authorization', 'Accept'],
             ],
             output: TechnicianPerformanceOutput::class,
             provider: TechnicianPerformanceProvider::class,
@@ -54,15 +54,15 @@ use Symfony\Component\Validator\Constraints as Assert;
                 summary: 'Get performance statistics for all technicians',
                 description: 'Returns total closed tickets and average resolution time in hours for each technician.',
                 responses: [
-                    Response::HTTP_OK => new OpenApiResponse(description: 'Statistics calculated successfully.')
-                ]
+                    Response::HTTP_OK => new OpenApiResponse(description: 'Statistics calculated successfully.'),
+                ],
             ),
         ),
         new Get(
             openapi: new OpenApiOperation(
                 summary: 'Get details of a specific technician',
-                description: 'Returns profile data for a single technician.'
-            )
+                description: 'Returns profile data for a single technician.',
+            ),
         ),
         new Post(
             status: Response::HTTP_CREATED,
@@ -71,9 +71,9 @@ use Symfony\Component\Validator\Constraints as Assert;
                 description: 'Creates a technician profile and links it with a mandatory security User account.',
                 responses: [
                     Response::HTTP_CREATED => new OpenApiResponse(description: 'Technician successfully created.'),
-                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(description: 'Validation failed (e.g. duplicate email).')
-                ]
-            )
+                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(description: 'Validation failed (e.g. duplicate email).'),
+                ],
+            ),
         ),
         new Patch(
             status: Response::HTTP_OK,
@@ -82,9 +82,9 @@ use Symfony\Component\Validator\Constraints as Assert;
                 description: 'Updates specific fields of an existing technician profile.',
                 responses: [
                     Response::HTTP_OK => new OpenApiResponse(description: 'Technician updated successfully.'),
-                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(description: 'Invalid input data.')
-                ]
-            )
+                    Response::HTTP_UNPROCESSABLE_ENTITY => new OpenApiResponse(description: 'Invalid input data.'),
+                ],
+            ),
         ),
     ],
 )]
@@ -142,8 +142,8 @@ class Technician
     private Collection $ticketHistories;
 
     #[ORM\OneToOne(inversedBy: 'technician', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['technician:read', 'technician:write'])]
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['technician:read'])]
     private ?User $login = null;
 
     public function __construct()
