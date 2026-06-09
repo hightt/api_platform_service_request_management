@@ -16,6 +16,14 @@ class GetTechnicianPerformanceHandler
     ) {
     }
 
+    /**
+         * @return array<int, array{
+         * technicianId: int|string,
+         * name: string,
+         * closedTickets: int|string,
+         * averageClosingTimeHours: int|float|string
+         * }>
+         */
     public function __invoke(GetTechnicianPerformanceQuery $query): array
     {
         $qb = $this->connection->createQueryBuilder();

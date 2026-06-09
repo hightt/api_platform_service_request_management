@@ -14,7 +14,14 @@ class TechnicianFixtures extends Fixture implements DependentFixtureInterface
 {
     public const TECH_ACTIVE_PREFIX = 'tech-active-';
 
+    /**
+    * @var array<int, string>
+    */
     private array $firstNames = ['John', 'Adam', 'Robert', 'David', 'James', 'Michael', 'William', 'Richard', 'Thomas', 'Charles'];
+
+    /**
+    * @var array<int, string>
+    */
     private array $lastNames = ['Doe', 'Smith', 'Tailor', 'Miller', 'Black', 'White', 'Walker', 'Green', 'Evans', 'Stone'];
 
     public function load(ObjectManager $manager): void

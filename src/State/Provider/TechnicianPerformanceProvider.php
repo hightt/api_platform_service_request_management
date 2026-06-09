@@ -11,6 +11,9 @@ use App\Dto\Technician\TechnicianPerformanceOutput;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 
+/**
+ * @implements ProviderInterface<TechnicianPerformanceOutput>
+ */
 class TechnicianPerformanceProvider implements ProviderInterface
 {
     use HandleTrait;
@@ -20,11 +23,15 @@ class TechnicianPerformanceProvider implements ProviderInterface
         $this->messageBus = $messageBus;
     }
 
+    /**
+     * @return list<TechnicianPerformanceOutput>
+     */
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): array
     {
+        /** @var list<array<string, mixed>> $rawStats */
         $rawStats = $this->handle(new GetTechnicianPerformanceQuery());
 
-        return array_map(fn (array $row) => new TechnicianPerformanceOutput(
+        return array_map(fn (array $row): TechnicianPerformanceOutput => new TechnicianPerformanceOutput(
             technicianId: (int) $row['technicianid'],
             name: (string) $row['name'],
             closedTickets: (int) $row['closedtickets'],

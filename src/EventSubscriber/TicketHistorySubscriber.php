@@ -6,7 +6,6 @@ namespace App\EventSubscriber;
 
 use App\Event\TicketStatusChangedEvent;
 use App\Service\TicketHistory\TicketHistoryCreateService;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Throwable;
@@ -14,7 +13,6 @@ use Throwable;
 class TicketHistorySubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
         private TicketHistoryCreateService $ticketHistoryCreateService,
         private LoggerInterface $logger,
     ) {

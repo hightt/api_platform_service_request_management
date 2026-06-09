@@ -12,12 +12,18 @@ class DeviceFixtures extends Fixture
 {
     public const DEVICE_PREFIX = 'device-';
 
+    /**
+    * @var array<int, string>
+    */
     private array $models = [
         'MacBook Pro M3', 'Dell XPS 15', 'ThinkPad X1 Carbon', 'HP EliteBook 840', 
         'Asus ROG Zephyrus', 'iPhone 15 Pro', 'iPad Pro 12.9', 'Samsung Galaxy S24', 
         'Sony Bravia 65', 'Cisco Router Catalyst'
     ];
 
+    /**
+    * @var array<int, string>
+    */
     private array $customers = [
         'ACME Corp', 'Stark Industries', 'Wayne Enterprises', 'Cyberdyne Systems', 
         'Umbrella Corp', 'Tyrell Corp', 'Initech LLC', 'Hooli Inc', 'Globex Corporation', 'Oscorp'

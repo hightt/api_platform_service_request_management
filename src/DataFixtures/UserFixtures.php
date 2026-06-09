@@ -23,16 +23,16 @@ class UserFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         $adminUser = new User();
-        $adminUser->setUserName('admin'); // 💥 Dopasowane do Twojego setUserName()
-        $adminUser->setRoles([UserRole::ADMIN->value]);
+        $adminUser->setUserName('admin');
+        $adminUser->setRoles([UserRole::ADMIN]);
         $adminUser->setPassword($this->passwordHasher->hashPassword($adminUser, 'admin123'));
         $manager->persist($adminUser);
         $this->addReference(self::ADMIN_USER_REF, $adminUser);
 
         for ($i = 1; $i <= 10; $i++) {
             $user = new User();
-            $user->setUserName(sprintf('tech_active_%d', $i)); // 💥 Dopasowane do Twojego setUserName()
-            $user->setRoles([UserRole::TECHNICIAN->value]);
+            $user->setUserName(sprintf('tech_active_%d', $i));
+            $user->setRoles([UserRole::TECHNICIAN]);
             $user->setPassword($this->passwordHasher->hashPassword($user, 'tech123'));
             $manager->persist($user);
             $this->addReference(self::TECH_ACTIVE_PREFIX . $i, $user);
@@ -40,8 +40,8 @@ class UserFixtures extends Fixture
 
         for ($i = 1; $i <= 10; $i++) {
             $user = new User();
-            $user->setUserName(sprintf('tech_inactive_%d', $i)); // 💥 Dopasowane do Twojego setUserName()
-            $user->setRoles([UserRole::TECHNICIAN->value]);
+            $user->setUserName(sprintf('tech_inactive_%d', $i));
+            $user->setRoles([UserRole::TECHNICIAN]);
             $user->setPassword($this->passwordHasher->hashPassword($user, 'tech123'));
             $manager->persist($user);
             

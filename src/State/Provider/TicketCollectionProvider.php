@@ -7,10 +7,14 @@ namespace App\State\Provider;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use App\Application\Ticket\Query\GetTicketCollectionQuery;
+use App\Application\Ticket\Query\TicketRowResult;
 use App\State\Pagination\CustomCollectionPaginator;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 
+/**
+ * @implements ProviderInterface<TicketRowResult>
+ */
 class TicketCollectionProvider implements ProviderInterface
 {
     use HandleTrait;
@@ -36,16 +40,27 @@ class TicketCollectionProvider implements ProviderInterface
             sortBy: $sortBy,
             sortOrder: $sortOrder,
             page: $page,
-            itemsPerPage: $itemsPerPage
+            itemsPerPage: $itemsPerPage,
         );
 
+        /** @var array{data: list<array<string, mixed>>, total_items: int} $result */
         $result = $this->handle($query);
 
+        $mappedItems = array_map(static fn (array $row): TicketRowResult => new TicketRowResult(
+            id: (int) $row['id'],
+            title: (string) $row['title'],
+            description: (string) $row['description'],
+            status: (string) $row['status'],
+            priority: (string) $row['priority'],
+            createdAt: (string) $row['createdAt'],
+            serialNumber: $row['serialNumber'] ? (string) $row['serialNumber'] : null,
+        ), $result['data']);
+
         return new CustomCollectionPaginator(
-            items: $result['data'],
+            items: $mappedItems,
             currentPage: $page,
             itemsPerPage: $itemsPerPage,
-            totalItems: $result['total_items']
+            totalItems: $result['total_items'],
         );
     }
 }

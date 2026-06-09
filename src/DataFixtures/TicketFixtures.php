@@ -17,6 +17,9 @@ class TicketFixtures extends Fixture implements DependentFixtureInterface
 {
     public const TICKET_PREFIX = 'ticket-';
 
+    /**
+    * @var array<int, string>
+    */
     private array $titles = [
         'Broken screen after drop', 'Battery replacement request', 'OS Reinstallation',
         'Liquid spill recovery', 'Keyboard key not responding', 'Overheating under load',

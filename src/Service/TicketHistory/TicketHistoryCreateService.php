@@ -13,18 +13,18 @@ class TicketHistoryCreateService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
-    )
-    {}
+    ) {
+    }
 
-    public function createAfterTicketStatusChangedEvent(TicketStatusChangedEvent $event)
+    public function createAfterTicketStatusChangedEvent(TicketStatusChangedEvent $event): void
     {
         $ticket = $event->getTicket();
 
         $history = new TicketHistory();
         $history
             ->setTicket($ticket)
-            ->setOldStatus($event->getOldStatus()?->value)
-            ->setNewStatus($event->getNewStatus()->value)
+            ->setOldStatus($event->getOldStatus())
+            ->setNewStatus($event->getNewStatus())
             ->setChangedAt(new DateTimeImmutable())
         ;
 

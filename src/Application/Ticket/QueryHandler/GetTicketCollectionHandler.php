@@ -23,18 +23,24 @@ class GetTicketCollectionHandler
     ) {
     }
 
+/**
+     * @return array{
+     * data: list<array<string, mixed>>,
+     * total_items: int
+     * }
+     */
     public function __invoke(GetTicketCollectionQuery $query): array
     {
         $qb = $this->connection->createQueryBuilder();
         $qb->select(
-                't.id', 
-                't.title',
-                't.description',
-                't.status', 
-                't.priority', 
-                't.created_at as createdAt',
-                'd.serial_number as serialNumber'
-            )
+            't.id',
+            't.title',
+            't.description',
+            't.status',
+            't.priority',
+            't.created_at as createdAt',
+            'd.serial_number as serialNumber',
+        )
             ->from('ticket', 't')
             ->leftJoin('t', 'device', 'd', 't.device_id = d.id')
         ;

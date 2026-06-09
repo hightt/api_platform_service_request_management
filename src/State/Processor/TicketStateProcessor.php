@@ -12,7 +12,6 @@ use App\Enum\TicketStatus;
 use App\Event\TicketStatusChangedEvent;
 use App\Message\TicketClosedMessage;
 use App\Service\Ticket\TicketWorkflowService;
-use InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -20,9 +19,13 @@ use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Workflow\WorkflowInterface;
 
+/**
+ * @implements ProcessorInterface<Ticket, Ticket>
+ */
 class TicketStateProcessor implements ProcessorInterface
 {
     public function __construct(
+        /** @var ProcessorInterface<Ticket, Ticket> */
         #[Autowire(service: 'api_platform.doctrine.orm.state.persist_processor')]
         private ProcessorInterface $persistProcessor,
         private WorkflowInterface $ticketStatusStateMachine,
@@ -34,10 +37,6 @@ class TicketStateProcessor implements ProcessorInterface
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): Ticket
     {
-        if (!$data instanceof Ticket) {
-            throw new InvalidArgumentException(sprintf('Expected instance of %s, %s given.', Ticket::class, get_debug_type($data)));
-        }
-
         $isNewEntity = is_null($data->getId());
         if ($isNewEntity) {
             return $this->handleCreation($data, $operation, $uriVariables, $context);
@@ -61,13 +60,17 @@ class TicketStateProcessor implements ProcessorInterface
 
         $result = $this->persistProcessor->process($data, $operation, $uriVariables, $context);
 
-        if ($newStatus === TicketStatus::DONE && !$isNewEntity) {
+        if ($newStatus === TicketStatus::DONE) {
             $this->messageBus->dispatch(new TicketClosedMessage($result->getId()));
         }
         
         return $result;
     }
 
+    /**
+     * @param array<string, mixed> $uriVariables
+     * @param array<string, mixed> $context
+     */
     private function handleCreation(Ticket $ticket, Operation $operation, array $uriVariables, array $context): Ticket
     {
         /** @var Ticket $result */

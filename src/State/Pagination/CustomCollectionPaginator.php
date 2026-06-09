@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace App\State\Pagination;
 
+use App\Application\Ticket\Query\TicketRowResult;
 use ApiPlatform\State\Pagination\PaginatorInterface;
 use ArrayIterator;
 use IteratorAggregate;
 use Traversable;
 
-
+/**
+ * @implements PaginatorInterface<TicketRowResult>
+ * @implements IteratorAggregate<mixed, TicketRowResult>
+ */
 class CustomCollectionPaginator implements PaginatorInterface, IteratorAggregate
 {
+    /**
+     * @param list<TicketRowResult> $items
+     */
     public function __construct(
         private array $items,
         private int $currentPage,
@@ -45,6 +52,9 @@ class CustomCollectionPaginator implements PaginatorInterface, IteratorAggregate
         return count($this->items);
     }
 
+    /**
+     * @return Traversable<mixed, TicketRowResult>
+     */
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->items);

@@ -9,10 +9,12 @@ use ApiPlatform\State\ProcessorInterface;
 use App\Application\Ticket\Command\AssignTechnicianCommand;
 use App\Dto\Ticket\TicketAssignInput;
 use App\Entity\Ticket;
-use InvalidArgumentException;
 use Symfony\Component\Messenger\HandleTrait;
 use Symfony\Component\Messenger\MessageBusInterface;
 
+/**
+ * @implements ProcessorInterface<TicketAssignInput, Ticket>
+ */
 class TicketAssignProcessor implements ProcessorInterface
 {
     use HandleTrait;
@@ -24,10 +26,6 @@ class TicketAssignProcessor implements ProcessorInterface
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): Ticket
     {
-        if (!$data instanceof TicketAssignInput) {
-            throw new InvalidArgumentException(sprintf('Expected instance of %s, %s given.', TicketAssignInput::class, get_debug_type($data)));
-        }
-
         $ticketId = (int) ($uriVariables['id'] ?? 0);
         $updatedTicket = $this->handle(new AssignTechnicianCommand(ticketId: $ticketId, technicianId: $data->technicianId));
 

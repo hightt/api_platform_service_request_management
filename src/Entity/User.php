@@ -38,7 +38,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $username = null;
 
     /**
-     * @var list<string> The user roles
+     * @var list<UserRole> The user roles
      */
     #[ORM\Column]
     #[Groups(['technician:read'])]
@@ -80,7 +80,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addRole(UserRole $role): self
     {
-        if (!in_array($role->value, $this->roles, true)) {
+        if (!in_array($role, $this->roles, true)) {
             $this->roles[] = $role->value;
         }
 
@@ -92,6 +92,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return in_array($role->value, $this->getRoles(), true);
     }
 
+    /**
+     * @param array<UserRole> $roles
+     */
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
