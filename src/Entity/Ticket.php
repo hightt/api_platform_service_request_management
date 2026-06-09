@@ -198,6 +198,11 @@ class Ticket
     #[ORM\OneToMany(targetEntity: TicketHistory::class, mappedBy: 'ticket')]
     private Collection $ticketHistories;
 
+    #[ORM\Column(type: 'integer', options: ['default' => 1])]
+    #[ORM\Version]
+    #[Groups(['ticket:read'])]
+    private int $version = 1;
+
     public function __construct()
     {
         $this->ticketHistories = new ArrayCollection();
@@ -346,5 +351,10 @@ class Ticket
         }
 
         return $this;
+    }
+
+    public function getVersion(): int
+    {
+        return $this->version;
     }
 }
