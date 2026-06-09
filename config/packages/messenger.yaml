@@ -9,6 +9,9 @@ framework:
                 retry_strategy:
                     max_retries: 3
                     multiplier: 2
+                options:
+                    stream: messages
+                    delete_after_ack: true
             failed: 'doctrine://default?queue_name=failed'
             # sync: 'sync://'
 
@@ -21,6 +24,7 @@ framework:
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async
             Symfony\Component\Notifier\Message\ChatMessage: async
             Symfony\Component\Notifier\Message\SmsMessage: async
+            'App\Message\TicketClosedMessage': async
 
             # Route your messages to the transports
             # 'App\Message\YourMessage': async

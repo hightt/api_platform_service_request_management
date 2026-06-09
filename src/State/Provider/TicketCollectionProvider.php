@@ -1,0 +1,66 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\State\Provider;
+
+use ApiPlatform\Metadata\Operation;
+use ApiPlatform\State\ProviderInterface;
+use App\Application\Ticket\Query\GetTicketCollectionQuery;
+use App\Application\Ticket\Query\TicketRowResult;
+use App\State\Pagination\CustomCollectionPaginator;
+use Symfony\Component\Messenger\HandleTrait;
+use Symfony\Component\Messenger\MessageBusInterface;
+
+/**
+ * @implements ProviderInterface<TicketRowResult>
+ */
+class TicketCollectionProvider implements ProviderInterface
+{
+    use HandleTrait;
+
+    public function __construct(MessageBusInterface $messageBus)
+    {
+        $this->messageBus = $messageBus;
+    }
+
+    public function provide(Operation $operation, array $uriVariables = [], array $context = []): CustomCollectionPaginator
+    {
+        $filters = $context['filters'] ?? [];
+        $page = (int) ($filters['page'] ?? 1);
+        $itemsPerPage = (int) ($filters['itemsPerPage'] ?? 30);
+        $sortData = $filters['order'] ?? [];
+        $sortBy = (string) (key($sortData) ?: 'id');
+        $sortOrder = (string) (current($sortData) ?: 'DESC');
+
+        $query = new GetTicketCollectionQuery(
+            status: $filters['status'] ?? null,
+            priority: $filters['priority'] ?? null,
+            serialNumber: $filters['serialNumber'] ?? null,
+            sortBy: $sortBy,
+            sortOrder: $sortOrder,
+            page: $page,
+            itemsPerPage: $itemsPerPage,
+        );
+
+        /** @var array{data: list<array<string, mixed>>, total_items: int} $result */
+        $result = $this->handle($query);
+
+        $mappedItems = array_map(static fn (array $row): TicketRowResult => new TicketRowResult(
+            id: (int) $row['id'],
+            title: (string) $row['title'],
+            description: (string) $row['description'],
+            status: (string) $row['status'],
+            priority: (string) $row['priority'],
+            createdAt: (string) $row['createdat'],
+            serialNumber: $row['serialnumber'] ? (string) $row['serialnumber'] : null,
+        ), $result['data']);
+
+        return new CustomCollectionPaginator(
+            items: $mappedItems,
+            currentPage: $page,
+            itemsPerPage: $itemsPerPage,
+            totalItems: $result['total_items'],
+        );
+    }
+}

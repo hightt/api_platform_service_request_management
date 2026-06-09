@@ -1,0 +1,36 @@
+framework:
+    workflows:
+        ticket_status:
+            type: "state_machine"
+            audit_trail:
+                enabled: true
+            marking_store:
+                type: "method"
+                property: "status"
+            supports:
+                - App\Entity\Ticket
+            places:
+                - NEW
+                - ASSIGNED
+                - IN_PROGRESS
+                - DONE
+                - CANCELLED
+            transitions:
+                assign:
+                    from: NEW
+                    to: ASSIGNED
+                start_progress:
+                    from: ASSIGNED
+                    to: IN_PROGRESS
+                complete:
+                    from: IN_PROGRESS
+                    to: DONE
+                cancel_new:
+                    from: NEW
+                    to: CANCELLED
+                cancel_assigned:
+                    from: ASSIGNED
+                    to: CANCELLED
+                cancel_in_progress:
+                    from: IN_PROGRESS
+                    to: CANCELLED
