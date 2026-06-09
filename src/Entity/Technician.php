@@ -41,6 +41,11 @@ use Symfony\Component\Validator\Constraints as Assert;
         new GetCollection(
             uriTemplate: '/technicians/stats',
             status: Response::HTTP_OK,
+            cacheHeaders: [
+                'max_age' => 60,      
+                'shared_max_age' => 120, 
+                'vary' => ['Authorization', 'Accept']
+            ],
             output: TechnicianPerformanceOutput::class,
             provider: TechnicianPerformanceProvider::class,
             normalizationContext: ['groups' => ['technician:stats']],
