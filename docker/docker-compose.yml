@@ -11,6 +11,7 @@ services:
       XDEBUG_CONFIG: "client_host=host.docker.internal client_port=9003"
       DATABASE_URL: ${DATABASE_URL}
       MESSENGER_TRANSPORT_DSN: "redis://redis:6379/messages"
+      REDIS_URL: ${REDIS_URL}
     depends_on:
       - db
       - redis
@@ -26,6 +27,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       MESSENGER_TRANSPORT_DSN: "redis://redis:6379/messages"
+      REDIS_URL: ${REDIS_URL}
     depends_on:
       - db
       - redis
