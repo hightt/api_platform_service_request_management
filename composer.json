@@ -106,6 +106,8 @@
         }
     },
     "require-dev": {
+        "api-platform/core": "*",
+        "dama/doctrine-test-bundle": "^8.6",
         "doctrine/doctrine-fixtures-bundle": "^4.3",
         "phpstan/phpstan": "^2.2",
         "phpstan/phpstan-doctrine": "^2.0",
